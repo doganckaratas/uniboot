@@ -8,7 +8,7 @@ nop				; Pad out before disk description
 ; Note: some of these values are hard-coded in the source!
 ; Values are those used by IBM for 1.44 MB, 3.5" diskette
 
-OEMLabel		db "PWRKRNEL"	; Disk label
+OEMLabel		db "POWERLDR"	; Disk label
 BytesPerSector		dw 512		; Bytes per sector
 SectorsPerCluster	db 1		; Sectors per cluster
 ReservedForBoot		dw 1		; Reserved sectors for boot record
