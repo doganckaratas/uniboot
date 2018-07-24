@@ -16,4 +16,3 @@ dd status=none conv=notrunc if=boot.bin of=boot.img
 
 echo '>>> Done!'
 
-qemu-system-i386 -soundhw pcspk -fda boot.img -monitor stdio 
