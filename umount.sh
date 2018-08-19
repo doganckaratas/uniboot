@@ -2,4 +2,4 @@
 
 echo ">>> Unmounting image..."
 
-losetup -d /dev/loop0
+sudo losetup -d /dev/loop0

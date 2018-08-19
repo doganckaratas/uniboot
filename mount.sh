@@ -2,5 +2,5 @@
 
 echo ">>> Mounting image..."
 
-losetup -d /dev/loop0
-losetup /dev/loop0 boot.img
+sudo losetup -D
+sudo losetup /dev/loop0 boot.img

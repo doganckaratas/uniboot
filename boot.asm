@@ -1,38 +1,28 @@
 BITS 16
-jmp short bootloader_start	; Jump past disk description sectio
-nop				; Pad out before disk description
+jmp short stage1
+nop
 
+; FAT12 Header
+DISK_LABEL		db "POWERLDR"
+BYTES_PER_SECTOR	dw 512
+SECTORS_PER_CLUSTER	db 1
+BOOT_SECTOR_COUNT	dw 1
+FAT_COUNT		db 2
+ROOT_ENTRY_COUNT	dw 224
+LOGICAL_SECTOR_COUNT	dw 2880
+MEDIUM_DESCRIPTOR	db 0F0h
+SECTORS_PER_FAT		dw 9
+SECTORS_PER_TRACK	dw 18
+SIDE_COUNT		dw 2
+HIDDEN_SECTOR_COUNT	dd 0
+LBA_SECTOR_COUNT	dd 0
+DRIVE_NUMBER		dw 0
+DRIVE_TYPE		db 41
+VOLUME_IDENTITY		dd 00000000h
+VOLUME_LABEL		db "POWERLOADER"
+FILESYSTEM_TYPE		db "FAT12   "
 
-; ------------------------------------------------------------------
-; Disk description table, to make it a valid floppy
-; Note: some of these values are hard-coded in the source!
-; Values are those used by IBM for 1.44 MB, 3.5" diskette
-
-OEMLabel		db "POWERLDR"	; Disk label
-BytesPerSector		dw 512		; Bytes per sector
-SectorsPerCluster	db 1		; Sectors per cluster
-ReservedForBoot		dw 1		; Reserved sectors for boot record
-NumberOfFats		db 2		; Number of copies of the FAT
-RootDirEntries		dw 224		; Number of entries in root dir
-					; (224 * 32 = 7168 = 14 sectors to read)
-LogicalSectors		dw 2880		; Number of logical sectors
-MediumByte		db 0F0h		; Medium descriptor byte
-SectorsPerFat		dw 9		; Sectors per FAT
-SectorsPerTrack		dw 18		; Sectors per track (36/cylinder)
-Sides			dw 2		; Number of sides/heads
-HiddenSectors		dd 0		; Number of hidden sectors
-LargeSectors		dd 0		; Number of LBA sectors
-DriveNo			dw 0		; Drive No: 0
-Signature		db 41		; Drive signature: 41 for floppy
-VolumeID		dd 00000000h	; Volume ID: any number
-VolumeLabel		db "POWERLOADER"; Volume Label: any 11 chars
-FileSystem		db "FAT12   "	; File system type: don't change!
-
-
-; ------------------------------------------------------------------
-; Main bootloader code
-
-bootloader_start:
+stage1:
 	mov ax, 07C0h			; Set up 4K of stack space above buffer
 	add ax, 544			; 8k buffer = 512 paragraphs + 32 paragraphs (loader)
 	cli				; Disable interrupts while changing stack
@@ -52,10 +42,10 @@ bootloader_start:
 	int 13h
 	jc fatal_disk_error
 	and cx, 3Fh			; Maximum sector number
-	mov [SectorsPerTrack], cx	; Sector numbers start at 1
+	mov [SECTORS_PER_TRACK], cx	; Sector numbers start at 1
 	movzx dx, dh			; Maximum head number
 	add dx, 1			; Head numbers start at 0 - add 1 for total
-	mov [Sides], dx
+	mov [SIDE_COUNT], dx
 
 no_change:
 	mov eax, 0			; Needed for some older BIOSes
@@ -102,7 +92,7 @@ search_dir:
 	mov es, ax			; Set DI to this info
 	mov di, buffer
 
-	mov cx, word [RootDirEntries]	; Search all (224) entries
+	mov cx, word [ROOT_ENTRY_COUNT]	; Search all (224) entries
 	mov ax, 0			; Searching at offset 0
 
 
@@ -297,15 +287,15 @@ l2hts:			; Calculate head, track and sector settings for int 13h
 	mov bx, ax			; Save logical sector
 
 	mov dx, 0			; First the sector
-	div word [SectorsPerTrack]
+	div word [SECTORS_PER_TRACK]
 	add dl, 01h			; Physical sectors start at 1
 	mov cl, dl			; Sectors belong in CL for int 13h
 	mov ax, bx
 
 	mov dx, 0			; Now calculate the head
-	div word [SectorsPerTrack]
+	div word [SECTORS_PER_TRACK]
 	mov dx, 0
-	div word [Sides]
+	div word [SIDE_COUNT]
 	mov dh, dl			; Head/side
 	mov ch, al			; Track
 
@@ -320,10 +310,10 @@ l2hts:			; Calculate head, track and sector settings for int 13h
 ; ------------------------------------------------------------------
 ; STRINGS AND VARIABLES
 
-	kern_filename	db "KERNEL  BIN"	; MikeOS kernel filename
+	kern_filename	db "STAGE2  BIN"	; Stage 2 Bootloader
 
 	disk_error	db "Floppy error! Press any key...", 0
-	file_not_found	db "KERNEL.BIN not found!", 0
+	file_not_found	db "STAGE2 not found!", 0
 
 	bootdev		db 0 	; Boot device number
 	cluster		dw 0 	; Cluster of the file we want to load
