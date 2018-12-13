@@ -4,16 +4,25 @@
 
 bits 16
 cli
-mov ax, 0
+xor ax, ax
 mov ss, ax
+; stack top is FFFF
 mov sp, 0FFFFh
 sti
 cld
-mov ax, 2000h
+; all segments points to 0500h, cause we loaded stage 2 into it
+mov ax, 0500h
 mov ds, ax
 mov es, ax
 mov fs, ax
 mov gs, ax
+
+; setup gdt idt ldt, ...
+; enable a20
+; jump 32 bits
+; prepare for 64 bits
+; jump 64 bits
+; parse elf header, load binary.
 
 mov si, hw
 pusha
@@ -26,7 +35,6 @@ int 10h				; Otherwise, print it
 jmp short repeat
 done:
 popa
-hlt
 hlt
 
 hw db "Stage 2 loaded successfully. ",13,10,0
