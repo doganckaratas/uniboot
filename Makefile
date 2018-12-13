@@ -17,12 +17,17 @@ image:
 	@touch boot.img
 	@rm boot.img
 	@mkdosfs -C boot.img 1440
+# mtools is a good utility for FAT formatted mediums
+# mdir, mdel, mcopy, etc..
+	@mcopy -i boot.img KERNEL.BIN ::/KERNEL.BIN
 	@dd status=none conv=notrunc if=boot.bin of=boot.img
 
+# not necessary to mount fs because I've using mtools
 .PHONY: mount
 mount: all
 	@sudo losetup /dev/loop0 boot.img
 
+# ditto
 .PHONY: umount
 umount:
 	@sudo losetup -d /dev/loop0 > /dev/null 2>&1
@@ -33,4 +38,4 @@ boot: all
 
 .PHONY: clean
 clean: 
-	@rm -rf *.img *.bin
+	@rm -rf *.img boot.bin
