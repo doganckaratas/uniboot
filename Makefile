@@ -1,7 +1,8 @@
 CC	= nasm
 CFLAGS	+= -O0 -w+orphan-labels -f bin 
-SRC	+= boot.asm
+SRC	+= stage1.asm
 TARGET	= $(SRC:.asm=.bin)
+IMAGE	= disk.img
 
 .PHONY: all
 all: assemble image
@@ -14,18 +15,18 @@ $(TARGET): $(SRC)
 
 .PHONY: image
 image:
-	@touch boot.img
-	@rm boot.img
-	@mkdosfs -C boot.img 1440
+	@touch $(IMAGE)
+	@rm $(IMAGE)
+	@mkdosfs -C $(IMAGE) 1440
 # mtools is a good utility for FAT formatted mediums
 # mdir, mdel, mcopy, etc..
-	@mcopy -i boot.img KERNEL.BIN ::/KERNEL.BIN
-	@dd status=none conv=notrunc if=boot.bin of=boot.img
+	@mcopy -i $(IMAGE) stage2.bin ::/stage2.bin
+	@dd status=none conv=notrunc if=$(TARGET) of=$(IMAGE)
 
 # not necessary to mount fs because I've using mtools
 .PHONY: mount
 mount: all
-	@sudo losetup /dev/loop0 boot.img
+	@sudo losetup /dev/loop0 $(IMAGE)
 
 # ditto
 .PHONY: umount
@@ -34,8 +35,8 @@ umount:
 
 .PHONY: boot
 boot: all
-	@qemu-system-i386 -soundhw pcspk -fda boot.img -monitor stdio
+	@qemu-system-i386 -soundhw pcspk -fda $(IMAGE) -monitor stdio
 
 .PHONY: clean
-clean: 
-	@rm -rf *.img boot.bin
+clean:
+	@rm -rf $(IMAGE) $(TARGET)

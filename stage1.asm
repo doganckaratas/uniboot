@@ -8,25 +8,25 @@ nop				; Pad out before disk description
 ; Note: some of these values are hard-coded in the source!
 ; Values are those used by IBM for 1.44 MB, 3.5" diskette
 
-OEMLabel		db "POWERLDR"	; Disk label
-BytesPerSector		dw 512		; Bytes per sector
-SectorsPerCluster	db 1		; Sectors per cluster
-ReservedForBoot		dw 1		; Reserved sectors for boot record
-NumberOfFats		db 2		; Number of copies of the FAT
-RootDirEntries		dw 224		; Number of entries in root dir
+label			db "POWERLDR"	; Disk label
+bytes_per_sector	dw 512		; Bytes per sector
+sector_per_cluster	db 1		; Sectors per cluster
+reserved_for_mbr	dw 1		; Reserved sectors for boot record
+fat_count		db 2		; Number of copies of the FAT
+root_entry_count	dw 224		; Number of entries in root dir
 					; (224 * 32 = 7168 = 14 sectors to read)
-LogicalSectors		dw 2880		; Number of logical sectors
-MediumByte		db 0F0h		; Medium descriptor byte
-SectorsPerFat		dw 9		; Sectors per FAT
-SectorsPerTrack		dw 18		; Sectors per track (36/cylinder)
-Sides			dw 2		; Number of sides/heads
-HiddenSectors		dd 0		; Number of hidden sectors
-LargeSectors		dd 0		; Number of LBA sectors
-DriveNo			dw 0		; Drive No: 0
-Signature		db 41		; Drive signature: 41 for floppy
-VolumeID		dd 00000000h	; Volume ID: any number
-VolumeLabel		db "POWERLOADER"; Volume Label: any 11 chars
-FileSystem		db "FAT12   "	; File system type: don't change!
+logical_sector_count	dw 2880		; Number of logical sectors
+medium_descr_byte	db 0F0h		; Medium descriptor byte
+sectors_per_fat		dw 9		; Sectors per FAT
+sectors_per_track	dw 18		; Sectors per track (36/cylinder)
+head_count		dw 2		; Number of head_count/heads
+hidden_sector_count	dd 0		; Number of hidden sectors
+large_sector_count	dd 0		; Number of LBA sectors
+drive_no		dw 0		; Drive No: 0
+drive_signature		db 41		; Drive signature: 41 for floppy
+volume_id		dd 00000000h	; Volume ID: any number
+volume_label		db "POWERLOADER"; Volume Label: any 11 chars
+file_system		db "FAT12   "	; File system type: don't change!
 
 
 ; ------------------------------------------------------------------
@@ -42,6 +42,9 @@ bootloader_start:
 
 	mov ax, 07C0h			; Set data segment to where we're loaded
 	mov ds, ax
+	
+	mov si, startup		; If not, print error message and reboot
+	call print_string
 
 	; NOTE: A few early BIOSes are reported to improperly set DL
 
@@ -52,18 +55,18 @@ bootloader_start:
 	int 13h
 	jc fatal_disk_error
 	and cx, 3Fh			; Maximum sector number
-	mov [SectorsPerTrack], cx	; Sector numbers start at 1
+	mov [sectors_per_track], cx	; Sector numbers start at 1
 	movzx dx, dh			; Maximum head number
 	add dx, 1			; Head numbers start at 0 - add 1 for total
-	mov [Sides], dx
+	mov [head_count], dx
 
 no_change:
-	mov eax, 0			; Needed for some older BIOSes
+	xor eax, eax			; Needed for some older BIOSes
 
 
 ; First, we need to load the root directory from the disk. Technical details:
 ; Start of root = ReservedForBoot + NumberOfFats * SectorsPerFat = logical 19
-; Number of root = RootDirEntries * 32 bytes/entry / 512 bytes/sector = 14
+; Number of root = root_entry_count * 32 bytes/entry / 512 bytes/sector = 14
 ; Start of user data = (start of root) + (number of root) = logical 33
 
 floppy_ok:				; Ready to read first block of data
@@ -102,8 +105,8 @@ search_dir:
 	mov es, ax			; Set DI to this info
 	mov di, buffer
 
-	mov cx, word [RootDirEntries]	; Search all (224) entries
-	mov ax, 0			; Searching at offset 0
+	mov cx, word [root_entry_count]	; Search all (224) entries
+	xor ax, ax			; Searching at offset 0
 
 
 next_root_entry:
@@ -167,7 +170,7 @@ read_fat_ok:
 
 	mov ax, 2000h			; Segment where we'll load the kernel
 	mov es, ax
-	mov bx, 0
+	xor bx, bx
 
 	mov ah, 2			; int 13h floppy read params
 	mov al, 1
@@ -210,7 +213,7 @@ load_file_sector:
 
 calculate_next_cluster:
 	mov ax, [cluster]
-	mov dx, 0
+	xor dx, dx
 	mov bx, 3
 	mul bx
 	mov bx, 2
@@ -254,9 +257,9 @@ end:					; We've got the file to load!
 ; BOOTLOADER SUBROUTINES
 
 reboot:
-	mov ax, 0
+	xor ax, ax
 	int 16h				; Wait for keystroke
-	mov ax, 0
+	xor ax, ax
 	int 19h				; Reboot the system
 
 
@@ -280,7 +283,7 @@ print_string:				; Output string in SI to screen
 reset_floppy:		; IN: [bootdev] = boot device; OUT: carry set on error
 	push ax
 	push dx
-	mov ax, 0
+	xor ax, ax
 	mov dl, byte [bootdev]
 	stc
 	int 13h
@@ -296,16 +299,16 @@ l2hts:			; Calculate head, track and sector settings for int 13h
 
 	mov bx, ax			; Save logical sector
 
-	mov dx, 0			; First the sector
-	div word [SectorsPerTrack]
+	xor dx, dx			; First the sector
+	div word [sectors_per_track]
 	add dl, 01h			; Physical sectors start at 1
 	mov cl, dl			; Sectors belong in CL for int 13h
 	mov ax, bx
 
-	mov dx, 0			; Now calculate the head
-	div word [SectorsPerTrack]
-	mov dx, 0
-	div word [Sides]
+	xor dx, dx			; Now calculate the head
+	div word [sectors_per_track]
+	xor dx, dx
+	div word [head_count]
 	mov dh, dl			; Head/side
 	mov ch, al			; Track
 
@@ -320,10 +323,11 @@ l2hts:			; Calculate head, track and sector settings for int 13h
 ; ------------------------------------------------------------------
 ; STRINGS AND VARIABLES
 
-	kern_filename	db "KERNEL  BIN"	; MikeOS kernel filename
+	kern_filename	db "STAGE2  BIN"	; MikeOS kernel filename
 
-	disk_error	db "Floppy error! Press any key...", 0
-	file_not_found	db "KERNEL.BIN not found!", 0
+	startup		db "Starting PowerLoader",13,10, 0
+	disk_error	db "Disk error", 13, 10, 0
+	file_not_found	db "File not found", 13, 10, 0
 
 	bootdev		db 0 	; Boot device number
 	cluster		dw 0 	; Cluster of the file we want to load
