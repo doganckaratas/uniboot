@@ -26,12 +26,12 @@ mov gs, ax
 
 mov si, hw
 pusha
-mov ah, 0Eh			; int 10h teletype function
+mov ah, 0Eh
 repeat:
-lodsb				; Get char from string
+lodsb
 cmp al, 0
-je done			; If char is zero, end of string
-int 10h				; Otherwise, print it
+je done
+int 10h
 jmp short repeat
 done:
 popa
