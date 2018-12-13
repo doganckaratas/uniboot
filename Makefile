@@ -1,8 +1,8 @@
-CC	= nasm
-CFLAGS	+= -O0 -w+orphan-labels -f bin 
-SRC	+= stage1.asm
-TARGET	= $(SRC:.asm=.bin)
-IMAGE	= disk.img
+CC		= nasm
+CFLAGS		+= -O0 -w+orphan-labels -f bin 
+SRC		= stage1.asm stage2.asm
+TARGET		= $(SRC:.asm=.bin)
+IMAGE		= disk.img
 
 .PHONY: all
 all: assemble image
@@ -10,8 +10,8 @@ all: assemble image
 .PHONY:	assemble
 assemble: $(TARGET)
 
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $^ -o $@
+%.bin: %.asm
+	$(CC) $(CFLAGS) -o $@ $<
 
 .PHONY: image
 image:
@@ -21,7 +21,7 @@ image:
 # mtools is a good utility for FAT formatted mediums
 # mdir, mdel, mcopy, etc..
 	@mcopy -i $(IMAGE) stage2.bin ::/stage2.bin
-	@dd status=none conv=notrunc if=$(TARGET) of=$(IMAGE)
+	@dd status=none conv=notrunc if=stage1.bin of=$(IMAGE)
 
 # not necessary to mount fs because I've using mtools
 .PHONY: mount
