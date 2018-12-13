@@ -42,7 +42,7 @@ bootloader_start:
 
 	mov ax, 07C0h			; Set data segment to where we're loaded
 	mov ds, ax
-	
+
 	mov si, startup		; If not, print error message and reboot
 	call print_string
 
@@ -345,4 +345,3 @@ buffer:				; Disk buffer begins (8k after this, stack starts)
 
 
 ; ==================================================================
-
