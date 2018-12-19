@@ -14,8 +14,10 @@ init:
 	mov sp, 0xFFFF
 	sti
 	cld
-	; all segments points to 0x0500, cause we loaded stage 2 into it
-	mov ax, 0x0500
+	; boot sector loads at 7c00, length 200
+	; after this stage 2 placed at 7f00
+	; all segments points to 7f00, cause we loaded stage 2 into it
+	mov ax, 0x7f00
 	mov ds, ax
 	mov es, ax
 	mov fs, ax

@@ -169,7 +169,7 @@ fatal_disk_error:
 read_fat_ok:
 	popa
 
-	mov ax, 0x0500			; Segment where we'll load the kernel
+	mov ax, 0x7f00			; Segment where we'll load the kernel
 	mov es, ax
 	xor bx, bx
 
@@ -191,7 +191,7 @@ load_file_sector:
 
 	call l2hts			; Make appropriate params for int 13h
 
-	mov ax, 0x0500			; Set buffer past what we've already read
+	mov ax, 0x7f00			; Set buffer past what we've already read
 	mov es, ax
 	mov bx, word [pointer]
 
@@ -251,7 +251,7 @@ end:					; We've got the file to load!
 	pop ax				; Clean up the stack (AX was pushed earlier)
 	mov dl, byte [bootdev]		; Provide kernel with boot device info
 
-	jmp 0x0500:0x0000		; Jump to entry point of loaded kernel!
+	jmp 0x7f00:0x0000		; Jump to entry point of loaded kernel!
 
 
 ; ------------------------------------------------------------------
