@@ -2,40 +2,46 @@
 ; dogan c. karatas
 ; 13 dec 2018
 
-bits 16
-cli
-xor ax, ax
-mov ss, ax
-; stack top is FFFF
-mov sp, 0FFFFh
-sti
-cld
-; all segments points to 0500h, cause we loaded stage 2 into it
-mov ax, 0500h
-mov ds, ax
-mov es, ax
-mov fs, ax
-mov gs, ax
+[bits 16]
+[org 0]
 
-; setup gdt idt ldt, ...
-; enable a20
-; jump 32 bits
-; prepare for 64 bits
-; jump 64 bits
-; parse elf header, load binary.
+init:
+	; set up segments (ss, ds, es, fs, gs ...)
+	cli
+	xor ax, ax
+	mov ss, ax
+	; stack top is 0xFFFF
+	mov sp, 0xFFFF
+	sti
+	cld
+	; all segments points to 0x0500, cause we loaded stage 2 into it
+	mov ax, 0x0500
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+.setup:
+	; setup gdt idt ldt, ...
+	; enable a20
+	; jump 32 bits
+	; prepare for 64 bits
+	; jump 64 bits
+	; parse elf header, load binary.
 
+	mov si, load_msg
+	call print
 
-
-mov si, load_msg
-call print
-hlt
+	; end of execution
+.finish:
+	cli
+	hlt
 
 
 ; print rutini
 ; si = string (zero termine edilmis)
 print:
 	pusha
-	mov ah, 0Eh
+	mov ah, 0x0E
 .repeat:
 	lodsb
 	cmp al, 0

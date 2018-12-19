@@ -1,4 +1,5 @@
-BITS 16
+[bits 16]
+[org 0]
 jmp short bootloader_start	; Jump past disk description sectio
 nop				; Pad out before disk description
 
@@ -16,7 +17,7 @@ fat_count		db 2		; Number of copies of the FAT
 root_entry_count	dw 224		; Number of entries in root dir
 					; (224 * 32 = 7168 = 14 sectors to read)
 logical_sector_count	dw 2880		; Number of logical sectors
-medium_descr_byte	db 0F0h		; Medium descriptor byte
+medium_descr_byte	db 0xF0		; Medium descriptor byte
 sectors_per_fat		dw 9		; Sectors per FAT
 sectors_per_track	dw 18		; Sectors per track (36/cylinder)
 head_count		dw 2		; Number of head_count/heads
@@ -24,7 +25,7 @@ hidden_sector_count	dd 0		; Number of hidden sectors
 large_sector_count	dd 0		; Number of LBA sectors
 drive_no		dw 0		; Drive No: 0
 drive_signature		db 41		; Drive signature: 41 for floppy
-volume_id		dd 00000000h	; Volume ID: any number
+volume_id		dd 0xD0A0CA00	; Volume ID: any number
 volume_label		db "POWERLOADER"; Volume Label: any 11 chars
 file_system		db "FAT12   "	; File system type: don't change!
 
@@ -33,14 +34,14 @@ file_system		db "FAT12   "	; File system type: don't change!
 ; Main bootloader code
 
 bootloader_start:
-	mov ax, 07C0h			; Set up 4K of stack space above buffer
+	mov ax, 0x07C0			; Set up 4K of stack space above buffer
 	add ax, 544			; 8k buffer = 512 paragraphs + 32 paragraphs (loader)
 	cli				; Disable interrupts while changing stack
 	mov ss, ax
 	mov sp, 4096
 	sti				; Restore interrupts
 
-	mov ax, 07C0h			; Set data segment to where we're loaded
+	mov ax, 0x07C0			; Set data segment to where we're loaded
 	mov ds, ax
 
 	mov si, startup		; If not, print error message and reboot
@@ -54,7 +55,7 @@ bootloader_start:
 	mov ah, 8			; Get drive parameters
 	int 13h
 	jc fatal_disk_error
-	and cx, 3Fh			; Maximum sector number
+	and cx, 0x3F			; Maximum sector number
 	mov [sectors_per_track], cx	; Sector numbers start at 1
 	movzx dx, dh			; Maximum head number
 	add dx, 1			; Head numbers start at 0 - add 1 for total
@@ -131,7 +132,7 @@ next_root_entry:
 
 
 found_file_to_load:			; Fetch cluster and load FAT into RAM
-	mov ax, word [es:di+0Fh]	; Offset 11 + 15 = 26, contains 1st cluster
+	mov ax, word [es:di+0x0F]	; Offset 11 + 15 = 26, contains 1st cluster
 	mov word [cluster], ax
 
 	mov ax, 1			; Sector 1 = first sector of first FAT
@@ -168,7 +169,7 @@ fatal_disk_error:
 read_fat_ok:
 	popa
 
-	mov ax, 0500h			; Segment where we'll load the kernel
+	mov ax, 0x0500			; Segment where we'll load the kernel
 	mov es, ax
 	xor bx, bx
 
@@ -179,8 +180,8 @@ read_fat_ok:
 
 
 ; Now we must load the FAT from the disk. Here's how we find out where it starts:
-; FAT cluster 0 = media descriptor = 0F0h
-; FAT cluster 1 = filler cluster = 0FFh
+; FAT cluster 0 = media descriptor = 0xF0
+; FAT cluster 1 = filler cluster = 0xFF
 ; Cluster start = ((cluster number) - 2) * SectorsPerCluster + (start of user)
 ;               = (cluster number) + 31
 
@@ -190,7 +191,7 @@ load_file_sector:
 
 	call l2hts			; Make appropriate params for int 13h
 
-	mov ax, 0500h			; Set buffer past what we've already read
+	mov ax, 0x0500			; Set buffer past what we've already read
 	mov es, ax
 	mov bx, word [pointer]
 
@@ -233,13 +234,13 @@ odd:
 
 
 even:
-	and ax, 0FFFh			; Mask out final 4 bits
+	and ax, 0x0FFF			; Mask out final 4 bits
 
 
 next_cluster_cont:
 	mov word [cluster], ax		; Store cluster
 
-	cmp ax, 0FF8h			; FF8h = end of file marker in FAT12
+	cmp ax, 0x0FF8			; FF8h = end of file marker in FAT12
 	jae end
 
 	add word [pointer], 512		; Increase buffer pointer 1 sector length
@@ -250,7 +251,7 @@ end:					; We've got the file to load!
 	pop ax				; Clean up the stack (AX was pushed earlier)
 	mov dl, byte [bootdev]		; Provide kernel with boot device info
 
-	jmp 0500h:0000h			; Jump to entry point of loaded kernel!
+	jmp 0x0500:0x0000		; Jump to entry point of loaded kernel!
 
 
 ; ------------------------------------------------------------------
@@ -266,7 +267,7 @@ reboot:
 print_string:				; Output string in SI to screen
 	pusha
 
-	mov ah, 0Eh			; int 10h teletype function
+	mov ah, 0x0E			; int 10h teletype function
 
 .repeat:
 	lodsb				; Get char from string
@@ -301,7 +302,7 @@ l2hts:			; Calculate head, track and sector settings for int 13h
 
 	xor dx, dx			; First the sector
 	div word [sectors_per_track]
-	add dl, 01h			; Physical sectors start at 1
+	add dl, 0x01			; Physical sectors start at 1
 	mov cl, dl			; Sectors belong in CL for int 13h
 	mov ax, bx
 
@@ -338,7 +339,7 @@ l2hts:			; Calculate head, track and sector settings for int 13h
 ; END OF BOOT SECTOR AND BUFFER START
 
 	times 510-($-$$) db 0	; Pad remainder of boot sector with zeros
-	dw 0AA55h		; Boot signature (DO NOT CHANGE!)
+	dw 0xAA55		; Boot signature (DO NOT CHANGE!)
 
 
 buffer:				; Disk buffer begins (8k after this, stack starts)
