@@ -35,7 +35,7 @@ umount:
 
 .PHONY: boot
 boot: all
-	@qemu-system-i386 -soundhw pcspk -fda $(IMAGE) -monitor stdio
+	@qemu-system-i386 -soundhw pcspk -hda $(IMAGE) -monitor stdio
 
 .PHONY: clean
 clean:

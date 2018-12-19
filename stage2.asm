@@ -24,17 +24,27 @@ mov gs, ax
 ; jump 64 bits
 ; parse elf header, load binary.
 
-mov si, hw
-pusha
-mov ah, 0Eh
-repeat:
-lodsb
-cmp al, 0
-je done
-int 10h
-jmp short repeat
-done:
-popa
+
+
+mov si, load_msg
+call print
 hlt
 
-hw db "Stage 2 loaded successfully. ",13,10,0
+
+; print rutini
+; si = string (zero termine edilmis)
+print:
+	pusha
+	mov ah, 0Eh
+.repeat:
+	lodsb
+	cmp al, 0
+	je .done
+	int 10h
+	jmp short .repeat
+.done:
+	popa
+	cli
+ret
+
+load_msg db "Stage 2 loaded successfully. ",13,10,0
