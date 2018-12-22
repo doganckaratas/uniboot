@@ -22,7 +22,7 @@ init:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
-.setup:
+.start:
 	; setup gdt idt ldt, ...
 	; enable a20
 	; jump 32 bits
@@ -30,29 +30,38 @@ init:
 	; jump 64 bits
 	; parse elf header, load binary.
 
+	push dx
+	mov dx, 0x03F8
+	call serial_init
+	mov al, 13
+	call serial_send_char
+	mov al, 10
+	call serial_send_char
+	mov si, load_msg
+	call serial_send_str
+	pop dx
+
 	mov si, load_msg
 	call print
+	mov si, msg2
+	call print
+	mov si, msg3
+	call print
+	mov si, msg4
+	call print
+
 
 	; end of execution
 .finish:
 	cli
 	hlt
+	jmp $ ; eger HLT state'i NMI interrupt ile sonlanirsa infinite loop'a gir
 
 
-; print rutini
-; si = string (zero termine edilmis)
-print:
-	pusha
-	mov ah, 0x0E
-.repeat:
-	lodsb
-	cmp al, 0
-	je .done
-	int 10h
-	jmp short .repeat
-.done:
-	popa
-	cli
-ret
+%include "serial.asm"
+%include "video.asm"
 
 load_msg db "Stage 2 loaded successfully. ",13,10,0
+msg2 db "From now on, I can load my kernel into memory and load it. ",13,10,0
+msg3 db "There is no 512 byte boundary limit, this binary has no limits, ",13,10,0
+msg4 db "We are in 16 Bit Real Mode,",13,10,0

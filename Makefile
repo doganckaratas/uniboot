@@ -1,5 +1,6 @@
 CC		= nasm
 CFLAGS		+= -O0 -w+orphan-labels -f bin 
+CFLAGS		+= -i./include/
 SRC		= stage1.asm stage2.asm
 TARGET		= $(SRC:.asm=.bin)
 IMAGE		= disk.img
@@ -35,7 +36,7 @@ umount:
 
 .PHONY: boot
 boot: all
-	@qemu-system-i386 -soundhw pcspk -hda $(IMAGE) -monitor stdio
+	@qemu-system-i386 -soundhw pcspk -hda $(IMAGE) -serial mon:stdio
 
 .PHONY: clean
 clean:
