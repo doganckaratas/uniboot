@@ -3,12 +3,8 @@
 jmp short bootloader_start	; Jump past disk description sectio
 nop				; Pad out before disk description
 
-
-; ------------------------------------------------------------------
-; Disk description table, to make it a valid floppy
-; Note: some of these values are hard-coded in the source!
-; Values are those used by IBM for 1.44 MB, 3.5" diskette
-
+; BIOS Parameter Block (BPB) for FAT12
+; Disk definitions here
 label			db "POWERLDR"	; Disk label
 bytes_per_sector	dw 512		; Bytes per sector
 sector_per_cluster	db 1		; Sectors per cluster
@@ -25,9 +21,9 @@ hidden_sector_count	dd 0		; Number of hidden sectors
 large_sector_count	dd 0		; Number of LBA sectors
 drive_no		dw 0		; Drive No: 0
 drive_signature		db 41		; Drive signature: 41 for floppy
-volume_id		dd 0xD0A0CA00	; Volume ID: any number
-volume_label		db "POWERLOADER"; Volume Label: any 11 chars
-file_system		db "FAT12   "	; File system type: don't change!
+volume_id		dd 0xD0A0CA00	; Volume ID 32 bit
+volume_label		db "POWERLOADER"; Volume Label 11 byte
+file_system		db "FAT12   "	; File system type
 
 
 ; ------------------------------------------------------------------
@@ -35,14 +31,12 @@ file_system		db "FAT12   "	; File system type: don't change!
 
 bootloader_start:
 	mov ax, 0x07C0			; Set up 4K of stack space above buffer
+	mov ds, ax
 	add ax, 544			; 8k buffer = 512 paragraphs + 32 paragraphs (loader)
 	cli				; Disable interrupts while changing stack
 	mov ss, ax
 	mov sp, 4096
 	sti				; Restore interrupts
-
-	mov ax, 0x07C0			; Set data segment to where we're loaded
-	mov ds, ax
 
 	mov si, startup		; If not, print error message and reboot
 	call print_string
@@ -141,8 +135,8 @@ found_file_to_load:			; Fetch cluster and load FAT into RAM
 	mov di, buffer			; ES:BX points to our buffer
 	mov bx, di
 
-	mov ah, 2			; int 13h params: read (FAT) sectors
-	mov al, 9			; All 9 sectors of 1st FAT
+	mov ax, 0x0209			; int 13h params: read (FAT) sectors
+					; All 9 sectors of 1st FAT
 
 	pusha				; Prepare to enter loop
 
@@ -173,8 +167,7 @@ read_fat_ok:
 	mov es, ax
 	xor bx, bx
 
-	mov ah, 2			; int 13h floppy read params
-	mov al, 1
+	mov ax, 0x0201			; int 13h floppy read params
 
 	push ax				; Save in case we (or int calls) lose it
 
