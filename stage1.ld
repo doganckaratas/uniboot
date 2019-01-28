@@ -18,7 +18,7 @@ SECTIONS
 	.bss : {
 		*(.bss);
 	}
-	
+
 	. = 0x7dfe;
 
 	.signature : {

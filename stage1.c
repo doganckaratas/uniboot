@@ -22,7 +22,7 @@ struct boot_sector {
 	uint32_t volume_id;
 	int8_t drive_label[11];
 	int8_t filesystem_type[8];
-} __attribute__((packed)) boot __attribute__((section (".data1"))) = {
+} __attribute__((packed)) bios_parameter_block __attribute__((section (".data1"))) = {
 	.jump_vector = {0xe9, 0x3c, 0x00},
 	.filesystem_type = "FAT12   ",
 	.drive_label = "POWERLOADER",
@@ -44,12 +44,45 @@ struct boot_sector {
 	.volume_id = 0x0d0a0ca00
 };
 
-struct boot_sector * _bs = (struct boot_sector*) 0x7c00;
+struct partition {
+	struct boot_sector volume_info_fat12;
+	uint8_t boot_code[448];
+	uint16_t boot_signature;
+} __attribute__((packed));
+
+struct drive {
+	uint8_t sector;
+	uint32_t lba;
+};
+
+/* directory entry struct */
+struct file {
+	int8_t name[8];
+	int8_t ext[3]; /* MSDOS 8.3 filename format */
+	uint8_t attr;
+	uint8_t __reserved_1;
+	uint8_t create_time_microseconds;
+	uint16_t create_time;
+	uint16_t create_date;
+	uint16_t last_access_date;
+	uint16_t __reserved_2;
+	uint16_t last_modified_time;
+	uint16_t last_modified_date;
+	uint16_t starting_cluster;
+	uint32_t size;
+} __attribute__((packed));
+
+struct boot_sector *boot = (struct boot_sector *) 0x7c00;
+struct drive *disk_info = (struct drive *) 0x7e00;
+struct file const *entry = 0;
+char const* stage2_filename = "STAGE2  BIN";
+uint8_t *buffer = 0;
+uint8_t size;
 
 void stage1()
 {
 	puts("test ");
-	puts(_bs->drive_label);
+	puts(boot->filesystem_type);
 } __attribute__((section (".load")));
 
 void putchar(char c)
