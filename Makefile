@@ -23,9 +23,7 @@ disk: stage1 stage2
 	@dd if=/dev/zero of=disk.img bs=512 count=20160
 	@if [ -f disk.img ]; then rm disk.img; fi;
 	@mkdosfs -C disk.img 1440
-	@dd if=stage1.bin of=disk.img bs=1 count=3 conv=notrunc
-	@dd if=stage1.bin of=disk.img skip=36 seek=36 bs=1 count=1 conv=notrunc
-	@dd if=stage1.bin of=disk.img skip=62 seek=62 bs=1 count=450 conv=notrunc
+	@dd if=stage1.bin of=disk.img bs=1 count=512 conv=notrunc
 	@mcopy -i disk.img stage2.bin ::/STAGE2.BIN
 
 boot:

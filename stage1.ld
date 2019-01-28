@@ -1,24 +1,33 @@
 SECTIONS
 {
-  . = 0x7c00;
+	. = 0x7c00;
 
-  .cseg :
-  {
-    *(.text);
-  }
+	.data : {
+		*(.data1);
+		*(.load);
+	}
 
-  .dseg :
-  {
-    *(.rodata);
-  }
+	.text : {
+		*(.text);
+	}
 
-  .sig : AT(0x7dfe)
-  {
-    SHORT(0xaa55);
-  }
+	.rodata : {
+		*(.rodata);
+	}
 
-  /DISCARD/ :
-  {
-    *(.eh_frame);
-  }
+	.bss : {
+		*(.bss);
+	}
+	
+	. = 0x7dfe;
+
+	.signature : {
+		SHORT(0xaa55);
+	}
+
+	/DISCARD/ :
+	{
+		*(.eh_frame);
+	}
+
 }
