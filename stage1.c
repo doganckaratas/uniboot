@@ -44,12 +44,6 @@ struct boot_sector {
 	.volume_id = 0x0d0a0ca00
 };
 
-struct partition {
-	struct boot_sector volume_info_fat12;
-	uint8_t boot_code[448];
-	uint16_t boot_signature;
-} __attribute__((packed));
-
 struct drive {
 	uint8_t sector;
 	uint32_t lba;
@@ -58,14 +52,14 @@ struct drive {
 /* directory entry struct */
 struct file {
 	int8_t name[8];
-	int8_t ext[3]; /* MSDOS 8.3 filename format */
-	uint8_t attr;
-	uint8_t __reserved_1;
+	int8_t extension[3]; /* MSDOS 8.3 filename format */
+	uint8_t attributes;
+	uint8_t __padding_1;
 	uint8_t create_time_microseconds;
 	uint16_t create_time;
 	uint16_t create_date;
 	uint16_t last_access_date;
-	uint16_t __reserved_2;
+	uint16_t __padding_2;
 	uint16_t last_modified_time;
 	uint16_t last_modified_date;
 	uint16_t starting_cluster;
@@ -82,7 +76,7 @@ uint8_t size;
 void stage1()
 {
 	puts("test ");
-	puts(boot->filesystem_type);
+	puts(stage2_filename);
 } __attribute__((section (".load")));
 
 void putchar(char c)
