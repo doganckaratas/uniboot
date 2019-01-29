@@ -1,43 +1,32 @@
-CC		= nasm
-CFLAGS		+= -O0 -w+orphan-labels -f bin 
-CFLAGS		+= -i./include/
-SRC		= stage1.asm stage2.asm
-TARGET		= $(SRC:.asm=.bin)
-IMAGE		= disk.img
+# binutils, mtools, dd, qemu
 
-.PHONY: all
-all: assemble image
+CFLAGS=-Wall -ffreestanding
 
-.PHONY:	assemble
-assemble: $(TARGET)
+all:	disk
 
-%.bin: %.asm
-	$(CC) $(CFLAGS) -o $@ $<
-
-.PHONY: image
-image:
-	@touch $(IMAGE)
-	@rm $(IMAGE)
-	@mkdosfs -C $(IMAGE) 1440
-# mtools is a good utility for FAT formatted mediums
-# mdir, mdel, mcopy, etc..
-	@mcopy -i $(IMAGE) stage2.bin ::/stage2.bin
-	@dd status=none conv=notrunc if=stage1.bin of=$(IMAGE)
-
-# not necessary to mount fs because I've using mtools
-.PHONY: mount
-mount: all
-	@sudo losetup /dev/loop0 $(IMAGE)
-
-# ditto
-.PHONY: umount
-umount:
-	@sudo losetup -d /dev/loop0 > /dev/null 2>&1
-
-.PHONY: boot
-boot: all
-	@qemu-system-i386 -soundhw pcspk -hda $(IMAGE) -serial mon:stdio
-
-.PHONY: clean
 clean:
-	@rm -rf $(IMAGE) $(TARGET)
+	rm -rf *~ *.o *.elf stage1.bin stage2.bin disk.img
+
+stage1.o: stage1.c
+	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
+
+stage2.o: stage2.c
+	$(CC) $(CFLAGS) -O -fno-builtin -m32 -c -o $@ $^
+
+stage1: stage1.o
+	$(LD) $(LDFLAGS) -T stage1.ld -melf_i386 -o $@.elf $^
+	objcopy -O binary $@.elf $@.bin
+
+stage2: stage2.o
+	$(LD) $(LDFLAGS) -T stage2.ld -melf_i386 -o $@.elf $^
+	objcopy -O binary $@.elf $@.bin
+
+disk: stage1 stage2
+	dd if=/dev/zero of=disk.img bs=1 count=2880
+	if [ -f disk.img ]; then rm disk.img; fi;
+	mkdosfs -C disk.img 1440
+	dd if=stage1.bin of=disk.img bs=1 count=512 conv=notrunc
+	mcopy -i disk.img stage2.bin ::/STAGE2.BIN
+
+boot: all
+	qemu-system-i386 disk.img
