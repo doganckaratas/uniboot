@@ -2,9 +2,9 @@ SECTIONS
 {
 	. = 0x7c00;
 
-	.data : {
-		*(.data1);
-		*(.load);
+	.boot : {
+		*(.boot_sector);
+		*(.init_fn);
 	}
 
 	.text : {

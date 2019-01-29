@@ -1,4 +1,6 @@
-CFLAGS=-Wall
+# binutils, mtools, dd, qemu
+
+CFLAGS=-Wall -ffreestanding
 
 all:	disk
 
@@ -26,5 +28,5 @@ disk: stage1 stage2
 	dd if=stage1.bin of=disk.img bs=1 count=512 conv=notrunc
 	mcopy -i disk.img stage2.bin ::/STAGE2.BIN
 
-boot:
+boot: all
 	qemu-system-i386 disk.img

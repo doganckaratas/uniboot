@@ -2,12 +2,13 @@ SECTIONS
 {
   . = 0x0700;
 
-  .cseg :
+  .text :
   {
+    *(.stage2);
     *(.text);
   }
 
-  .dseg :
+  .data :
   {
     *(.rodata);
   }
