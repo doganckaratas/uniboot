@@ -13,7 +13,7 @@ asm(".code16gcc");
 
 void stage1() __attribute__((section (".init_fn")));
 int8_t seek_file();
-uint16_t read_directory();
+uint8_t read_directory();
 
 /* Boot sector linker location mapping
  *  ______________________
@@ -83,7 +83,6 @@ struct disk_drive {
 	uint32_t lba;
 };
 
-/* directory entry struct */
 struct file {
 	int8_t name[8];
 	int8_t extension[3]; /* MSDOS 8.3 filename format */
@@ -108,26 +107,26 @@ uint8_t size;
 
 void stage1()
 {
-	// read hard disk drive information into memory at 0x7e00
+	/* disk information loaded into 0x7e00 */
 	asm ("int $0x13" : "=c"(disk->sector) : "a"(0x0800), "d"(0x80) : "bx");
 	disk->sector &= 0b00111111;
-	
-	// read the root directory into memory at 0x500
+
+	/* root dir loaded into 0x500 */
 	buffer = (uint8_t*) 0x0500;
 	disk->lba = bpb.reserved_sector_count + (bpb.fat_count * bpb.sectors_per_fat);
 	size = bpb.root_entry_count * sizeof(struct file) / bpb.bytes_per_sector;
 	read_directory();
-	
-	// iterate over root directory entries and look for STAGE2
+
+	/* seek stage2 in root */
 	for (entry = (struct file *) buffer; ; ++entry) {
 		if (seek_file() == 0) {
-		// load the first 3 sectors of  into memory at 0x0700
+		/* load the first 3 sectors of  into memory at 0x0700 */
 		buffer = (uint8_t *) 0x0700;
 		disk->lba += size + (entry->starting_cluster - 2) * bpb.sectors_per_cluster;
 		size = 3;
 		read_directory();
-		
-		// execute STAGE2
+
+		/* jump to stage2 */
 		asm ("jmpw %0, %1" : : "g"(0x0000), "g"(0x0700));
 		}
 	}
@@ -140,16 +139,19 @@ int8_t seek_file()
 	return ((int8_t*) entry)[i] - stage2_filename[i];
 }
 
-uint16_t read_directory()
+uint8_t read_directory()
 {
-	// convert the LBA into CHS values
-	uint32_t t = bpb.head_count * disk->sector;
-	uint16_t c = disk->lba / t;
-	uint16_t h = (disk->lba % t) / disk->sector;
-	c <<= 8;
-	c |= ((disk->lba % t) % disk->sector) + 1;
-	
-	// read sectors from the hard disk into memory at 0x0500
-	asm ("int $0x13" : : "a"(0x0200 | size), "b"(buffer), "c"(c), "d"((h << 8) | 0x0080));
+	/* lba to chs conversion */
+	uint32_t track;
+	uint16_t cylinder;
+	uint16_t head;
+	track = bpb.head_count * disk->sector;
+	head = (disk->lba % track) / disk->sector;
+	cylinder = disk->lba / track;
+	cylinder <<= 8;
+	cylinder |= ((disk->lba % track) % disk->sector) + 1;
+
+	/* 0x500 is the address of the memory for loading sectors */
+	asm ("int $0x13" : : "a"(0x0200 | size), "b"(buffer), "c"(cylinder), "d"((head << 8) | 0x0080));
 	return 0;
 }
