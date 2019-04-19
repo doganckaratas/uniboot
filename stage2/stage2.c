@@ -8,6 +8,7 @@
 
 /* Tell gcc to emit 16-bit code */
 asm (".code16gcc");
+#include "common.h"
 
 void stage2() __attribute__((section (".stage2")));
 void putchar(char c);
@@ -26,6 +27,8 @@ void puts(const char *s)
 
 void stage2()
 {
-	puts("Stage 2 loaded.\r\n");
+	puts("uniboot "VERSION"\r\n");
+	puts("[+] Stage 1 loaded.\r\n");
+	puts("[+] Stage 2 loaded.\r\n");
 	while (1);
 }
