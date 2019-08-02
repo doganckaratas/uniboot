@@ -16,6 +16,13 @@ asm (".code16gcc");
  * ...
 */
 
+/* Disk layout sample
+ *  Sector 0                       Sector 1                     ...
+ *  ________________________________________________________________
+ * |Stage 1 + 2 (/boot partition) | powerkernel (/ partition) | ... |
+ *  ----------------------------------------------------------------
+*/
+
 void stage2() __attribute__((section (".stage2")));
 void putchar(char c);
 void puts(const char *s);
