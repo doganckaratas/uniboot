@@ -10,6 +10,12 @@
 asm (".code16gcc");
 #include "common.h"
 
+/* TODO 
+ * Implement Disk IO
+ * Load ELF Binary w/ GRUB Multiboot support
+ * ...
+*/
+
 void stage2() __attribute__((section (".stage2")));
 void putchar(char c);
 void puts(const char *s);
