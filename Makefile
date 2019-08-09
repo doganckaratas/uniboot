@@ -9,30 +9,26 @@
 CFLAGS=-Wall -ffreestanding -I./include
 OUTPUT=./bin
 IMAGE=disk.img
+MAKE=make
 
+.PHONY: all
 all:	disk
 
+.PHONY: clean
 clean:
+	$(MAKE) -C stage1 clean V=1
+	$(MAKE) -C stage2 clean V=1
 	rm -rf *~ $(OUTPUT) disk.img
 
-stage1.o: stage1/stage1.c
-	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
-	$(CC) $(CFLAGS) -Os -m32 -c -o $(OUTPUT)/$@ $^
+.PHONY: stage1
+stage1:
+	$(MAKE) -C stage1 all V=1
 
-stage2.o: stage2/stage2.c
-	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
-	$(CC) $(CFLAGS) -O -fno-builtin -m32 -c -o $(OUTPUT)/$@ $^
+.PHONY: stage2
+stage2:
+	$(MAKE) -C stage2 all V=1
 
-stage1: stage1.o
-	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
-	$(LD) $(LDFLAGS) -T stage1/stage1.ld -melf_i386 -o $(OUTPUT)/$@.elf $(OUTPUT)/$^
-	objcopy -O binary $(OUTPUT)/$@.elf $(OUTPUT)/$@.bin
-
-stage2: stage2.o
-	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
-	$(LD) $(LDFLAGS) -T stage2/stage2.ld -melf_i386 -o $(OUTPUT)/$@.elf $(OUTPUT)/$^
-	objcopy -O binary $(OUTPUT)/$@.elf $(OUTPUT)/$@.bin
-
+.PHONY: disk
 disk: stage1 stage2
 	dd if=/dev/zero of=$(IMAGE) bs=1 count=2880
 	if [ -f $(IMAGE) ]; then rm $(IMAGE); fi;
@@ -40,5 +36,6 @@ disk: stage1 stage2
 	dd if=$(OUTPUT)/stage1.bin of=$(IMAGE) bs=1 count=512 conv=notrunc
 	mcopy -i $(IMAGE) $(OUTPUT)/stage2.bin ::/STAGE2.BIN
 
+.PHONY: boot
 boot: all
 	qemu-system-i386 -drive media=disk,format=raw,file=$(IMAGE)

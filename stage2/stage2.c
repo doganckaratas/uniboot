@@ -8,7 +8,10 @@
 
 /* Tell gcc to emit 16-bit code */
 asm (".code16gcc");
+
 #include "common.h"
+#include "util/util.c"
+#include "disk/disk.c"
 
 /* TODO 
  * Implement Disk IO
@@ -24,24 +27,17 @@ asm (".code16gcc");
 */
 
 void stage2() __attribute__((section (".stage2")));
-void putchar(char c);
-void puts(const char *s);
-
-void putchar(char c)
-{
-	asm("int $0x0010" : : "a"(0x0e00 | c));
-}
-
-void puts(const char *s)
-{
-	for (; *s; ++s)
-		putchar(*s);
-}
+void seek_file(void);
 
 void stage2()
 {
-	puts("uniboot "VERSION"\r\n");
+	puts("uniboot "VERSION", written by Dogan C. Karatas\r\n");
 	puts("[+] Stage 1 loaded.\r\n");
 	puts("[+] Stage 2 loaded.\r\n");
 	while (1);
+}
+
+void seek_file()
+{
+	;
 }
