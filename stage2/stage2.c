@@ -9,9 +9,11 @@
 /* Tell gcc to emit 16-bit code */
 asm (".code16gcc");
 
+#include "stdtypes.h"
 #include "common.h"
 #include "util/util.c"
 #include "disk/disk.c"
+#include "memory/memory.c"
 
 /* TODO 
  * Implement Disk IO
@@ -34,6 +36,9 @@ void stage2()
 	puts("uniboot "VERSION", written by Dogan C. Karatas\r\n");
 	puts("[+] Stage 1 loaded.\r\n");
 	puts("[+] Stage 2 loaded.\r\n");
+
+	memory_report_e820(0x1000, 0x2000);
+
 	while (1);
 }
 
