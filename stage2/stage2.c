@@ -33,10 +33,10 @@ void seek_file(void);
 
 void stage2()
 {
-	puts("uniboot "VERSION", written by Dogan C. Karatas\r\n");
-	puts("[+] Stage 1 loaded.\r\n");
-	puts("[+] Stage 2 loaded.\r\n");
-
+	print("uniboot "VERSION", written by Dogan C. Karatas\r\n");
+	print("[+] Stage 1 loaded.\r\n");
+	print("[+] Stage 2 loaded.\r\n");
+	print("test: %d\r\n", atoi("123"));
 	memory_report_e820(0x1000, 0x2000);
 
 	while (1);

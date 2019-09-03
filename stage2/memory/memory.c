@@ -52,20 +52,14 @@ void memory_report_e820(int map_addr, int map_size)
 	const int smap_size = map_size;
 	int entry_count = detectMemory(smap, smap_size / sizeof(SMAP_entry_t));
 
-	puts("[+] Detecting memory via E820...\r\n");
+	print("[+] Detecting memory...\r\n");
 
 	if (entry_count == -1) {
-		puts("[!] E820 can't detected any memory. Fall back to another method!\r\n");
+		print("[!] Failed to get memory map! Fall back to another method!\r\n");
 		return;
 	} else {
 		for (int i = 0; i < entry_count; i++) {
-			puts(" Index: ");
-			putchar(i + 0x30);
-			puts(" Type: ");
-			putchar(smap[i].Type + 0x30);
-			puts(" (");
-			puts(memory_type_to_string(smap[i].Type));
-			puts(")\r\n");
+			print(" Index: %d Type: %d (%s) Address: 0x%x%x Length: 0x%x%x\r\n", i, smap[i].Type, memory_type_to_string(smap[i].Type), smap[i].BaseH, smap[i].BaseL, smap[i].LengthH, smap[i].LengthL);
 		}
 	}
 }
