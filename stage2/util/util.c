@@ -1,4 +1,18 @@
+/**
+ * @file	util.c
+ * @brief	uniboot - the universal bootloader project
+ * @version	v1.0
+ * @author	dogan c. karatas
+ * @date	29/01/2019
+ **/
+
+/* Tell gcc to emit 16-bit code */
+asm (".code16gcc");
+
 #include <stdarg.h>
+#include "util.h"
+#include "stdtypes.h"
+#include "common.h"
 
 void putchar(char c)
 {

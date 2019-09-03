@@ -11,9 +11,8 @@ asm (".code16gcc");
 
 #include "stdtypes.h"
 #include "common.h"
-#include "util/util.c"
-#include "disk/disk.c"
-#include "memory/memory.c"
+#include "util.h"
+#include "memory.h"
 
 /* TODO 
  * Implement Disk IO
@@ -33,11 +32,11 @@ void seek_file(void);
 
 void stage2()
 {
-	print("uniboot "VERSION", written by Dogan C. Karatas\r\n");
-	print("[+] Stage 1 loaded.\r\n");
-	print("[+] Stage 2 loaded.\r\n");
-	print("test: %d\r\n", atoi("123"));
+	print("uniboot "VERSION", written by Dogan C. Karatas\r\n"
+		"[+] Stage 1 loaded.\r\n"
+		"[+] Stage 2 loaded.\r\n");
 	memory_report_e820(0x1000, 0x2000);
+	print("test: %d\r\n", atoi("123") + 25 );
 
 	while (1);
 }

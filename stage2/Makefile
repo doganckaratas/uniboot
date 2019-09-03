@@ -8,18 +8,25 @@
 
 CFLAGS=-Wall -ffreestanding -I../include
 OUTPUT=../bin
+MAKE=make
 
 .PHONY: all
 all:	stage2
 
+memory/memory.o: memory/memory.c
+	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
+
+util/util.o: util/util.c
+	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
+
 stage2.o: stage2.c
 	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
 
-stage2: stage2.o
+stage2: stage2.o memory/memory.o util/util.o
 	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
-	$(LD) $(LDFLAGS) -T stage2.ld -melf_i386 -o $@.elf stage2.o
+	$(LD) $(LDFLAGS) -T stage2.ld -melf_i386 -o $@.elf $^
 	objcopy -O binary $@.elf $(OUTPUT)/$@.bin
 
 .PHONY: clean
 clean:
-	rm -rf stage2.o stage2.elf
+	rm -rf stage2.o memory/memory.o util/util.o stage2.elf

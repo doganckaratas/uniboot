@@ -1,13 +1,18 @@
-typedef struct SMAP_entry {
+/**
+ * @file	memory.c
+ * @brief	uniboot - the universal bootloader project
+ * @version	v1.0
+ * @author	dogan c. karatas
+ * @date	29/01/2019
+ **/
 
-	uint32_t BaseL; // base address uint64_t
-	uint32_t BaseH;
-	uint32_t LengthL; // length uint64_t
-	uint32_t LengthH;
-	uint32_t Type; // entry Type
-	uint32_t ACPI; // extended
+/* Tell gcc to emit 16-bit code */
+asm (".code16gcc");
 
-}__attribute__((packed)) SMAP_entry_t;
+#include "memory.h"
+#include "stdtypes.h"
+#include "common.h"
+#include "util.h"
 
 const char* memory_type_to_string(uint32_t type)
 {
@@ -22,35 +27,30 @@ const char* memory_type_to_string(uint32_t type)
 }
 
 // load memory map to buffer - note: regparm(3) avoids stack issues with gcc in real mode
-int __attribute__((noinline)) __attribute__((regparm(3))) detectMemory(SMAP_entry_t* buffer, int maxentries)
+int __attribute__((noinline)) __attribute__((regparm(3))) memory_detect(map_entry_t* buffer, int maxentries)
 {
 	uint32_t contID = 0;
 	int entries = 0, signature, bytes;
-	do
-	{
+	do {
 		__asm__ __volatile__ ("int  $0x15"
 				: "=a"(signature), "=c"(bytes), "=b"(contID)
 				: "a"(0xE820), "b"(contID), "c"(24), "d"(0x534D4150), "D"(buffer));
 		if (signature != 0x534D4150)
 			return -1; // error
-		if (bytes > 20 && (buffer->ACPI & 0x0001) == 0)
-		{
+		if (bytes > 20 && (buffer->acpi_extended & 0x0001) == 0) {
 			// ignore this entry
-		}
-		else {
+		} else {
 			buffer++;
 			entries++;
 		}
-	}
-	while (contID != 0 && entries < maxentries);
+	} while (contID != 0 && entries < maxentries);
 	return entries;
 }
 
 void memory_report_e820(int map_addr, int map_size)
 {
-	SMAP_entry_t* smap = (SMAP_entry_t*) map_addr;
-	const int smap_size = map_size;
-	int entry_count = detectMemory(smap, smap_size / sizeof(SMAP_entry_t));
+	map_entry_t* map = (map_entry_t*) map_addr;
+	int entry_count = memory_detect(map, map_size / sizeof(map_entry_t));
 
 	print("[+] Detecting memory...\r\n");
 
@@ -59,7 +59,7 @@ void memory_report_e820(int map_addr, int map_size)
 		return;
 	} else {
 		for (int i = 0; i < entry_count; i++) {
-			print(" Index: %d Type: %d (%s) Address: 0x%x%x Length: 0x%x%x\r\n", i, smap[i].Type, memory_type_to_string(smap[i].Type), smap[i].BaseH, smap[i].BaseL, smap[i].LengthH, smap[i].LengthL);
+			print(" Index: %d Type: %d (%s) Address: 0x%x%x Length: 0x%x%x\r\n", i, map[i].type, memory_type_to_string(map[i].type), map[i].base_addr_high, map[i].base_addr_low, map[i].length_high, map[i].length_low);
 		}
 	}
 }
