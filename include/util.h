@@ -13,5 +13,7 @@ void puts(const char *s);
 const char* itoa(int val, int base);
 int atoi(char* str);
 void print(const char *fmt, ...);
+int abs(int val);
+
 
 #endif /* _UTIL_H */

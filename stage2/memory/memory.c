@@ -59,7 +59,19 @@ void memory_report_e820(int map_addr, int map_size)
 		return;
 	} else {
 		for (int i = 0; i < entry_count; i++) {
-			print(" Index: %d Type: %d (%s) Address: 0x%x%x Length: 0x%x%x\r\n", i, map[i].type, memory_type_to_string(map[i].type), map[i].base_addr_high, map[i].base_addr_low, map[i].length_high, map[i].length_low);
+			print(" Index: %d ", i);
+			if (map[i].base_addr_high) {
+				print("Address: 0x%x%x ", map[i].base_addr_high, map[i].base_addr_low);
+			} else {
+				print("Address: 0x%x ", map[i].base_addr_low);
+			}
+
+			if (map[i].length_high) {
+				print("Length: 0x%x%x ", map[i].length_high, map[i].length_low);
+			} else {
+				print("Length: 0x%x ", map[i].length_low);
+			}
+			print("Type: %d (%s)\r\n", map[i].type, memory_type_to_string(map[i].type));
 		}
 	}
 }

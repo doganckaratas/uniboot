@@ -11,6 +11,7 @@ asm (".code16gcc");
 
 #include <stdarg.h>
 #include "util.h"
+#include "itoa.h"
 #include "stdtypes.h"
 #include "common.h"
 
@@ -25,8 +26,11 @@ void puts(const char *s)
 		putchar(*s);
 }
 
+// PORT PDCLIB !!
+
 const char* itoa(int val, int base)
 {
+#if 0
 	if (val == 0)
 		return "0";
 	static char buf[32] = {0};
@@ -35,6 +39,17 @@ const char* itoa(int val, int base)
 		buf[31 - i] = "0123456789abcdef"[val % base];
 	}
 	return (char *) &buf[32 - i];
+#endif
+	char buf[32] = {0};
+	return _itoa(val, buf, base);
+}
+
+int abs(int val)
+{
+	if (val < 0) 
+		return -val;
+	else
+		return val;
 }
 
 int atoi(char* str)
