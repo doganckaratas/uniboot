@@ -3,17 +3,19 @@
  * @brief	uniboot - the universal bootloader project
  * @version	v1.0
  * @author	dogan c. karatas
- * @date	29/01/2019
+ * @date	11/02/2020
  **/
 
 /* Tell gcc to emit 16-bit code */
-asm(".code16gcc");
+__asm__ (".code16gcc");
 
 #include "stdtypes.h"
+#include "common.h"
 
 void stage1() __attribute__((section (".init_fn")));
 int8_t seek_file();
 uint8_t read_directory();
+void puts(char *);
 
 /* Boot sector linker location mapping
  *  ______________________
@@ -59,8 +61,8 @@ struct boot_sector {
 } __attribute__((packed)) const bpb __attribute__((section (".boot_sector"))) = {
 	.jump_vector = {0xe9, sizeof(bpb) , 0x00},
 	.filesystem_type = "FAT12   ",
-	.drive_label = "POWERLOADER",
-	.oem_name = "POWERLDR",
+	.drive_label = "UNIBOOTLDR",
+	.oem_name = "UNIBOOT0",
 	.bytes_per_sector = 512,
 	.sectors_per_cluster = 1,
 	.reserved_sector_count = 1,
@@ -75,7 +77,7 @@ struct boot_sector {
 	.total_sector_count_2 = 0,
 	.drive_index = 0,
 	.extended_boot_signature = 41,
-	.volume_id = 0x0d0a0ca00
+	.volume_id = 0x00001b007
 };
 
 struct disk_drive {
@@ -99,35 +101,36 @@ struct file {
 	uint32_t size;
 } __attribute__((packed));
 
-struct disk_drive *disk = (struct disk_drive *) 0x7e00;
+struct disk_drive *disk = (struct disk_drive *) 0x7f00;
+uint8_t *buffer = (uint8_t *) 0x0500;
+void (*stage2)(void) = (void (*)(void)) 0x0700;
 struct file const *entry = 0;
 char const *stage2_filename = "STAGE2  BIN";
-uint8_t *buffer = 0;
 uint8_t size;
 
 void stage1()
 {
-	/* disk information loaded into 0x7e00 */
-	asm ("int $0x13" : "=c"(disk->sector) : "a"(0x0800), "d"(0x80) : "bx");
+	__asm__ volatile ("movl $0x7bff, %esp");
+	puts("uniboot "VERSION"\r\n[+] Stage 1 loaded.\r\n");
+	__asm__ ("int $0x13" : "=c"(disk->sector) : "a"(0x0800), "d"(0x80) : "bx");
 	disk->sector &= 0b00111111;
 
-	/* root dir loaded into 0x500 */
-	buffer = (uint8_t*) 0x0500;
 	disk->lba = bpb.reserved_sector_count + (bpb.fat_count * bpb.sectors_per_fat);
 	size = bpb.root_entry_count * sizeof(struct file) / bpb.bytes_per_sector;
+	/* root dir loaded into 0x500 */
 	read_directory();
 
 	/* seek stage2 in root */
 	for (entry = (struct file *) buffer; ; ++entry) {
 		if (seek_file() == 0) {
-		/* load the first 3 sectors of  into memory at 0x0700 */
-		buffer = (uint8_t *) 0x0700;
-		disk->lba += size + (entry->starting_cluster - 2) * bpb.sectors_per_cluster;
-		size = 3;
-		read_directory();
+			/* load the first 8 sectors of  into memory at 0x0700 */
+			buffer = (uint8_t *) stage2;
+			disk->lba += size + (entry->starting_cluster - 2) * bpb.sectors_per_cluster;
+			/* TODO: Seek until end of file, not predefined size */
+			read_directory();
 
-		/* jump to stage2 */
-		asm ("jmpw %0, %1" : : "g"(0x0000), "g"(0x0700));
+			/* jump to stage2 */
+			stage2();
 		}
 	}
 }
@@ -151,7 +154,12 @@ uint8_t read_directory()
 	cylinder <<= 8;
 	cylinder |= ((disk->lba % track) % disk->sector) + 1;
 
-	/* 0x500 is the address of the memory for loading sectors */
-	asm ("int $0x13" : : "a"(0x0200 | size), "b"(buffer), "c"(cylinder), "d"((head << 8) | 0x0080));
+	__asm__ ("int $0x13" : : "a"(0x0200 | size), "b"(buffer), "c"(cylinder), "d"((head << 8) | 0x0080));
 	return 0;
+}
+
+void puts(char *s)
+{
+	for (; *s; ++s)
+		__asm__ ("int $0x0010" : : "a"(0x0e00 | *s));
 }

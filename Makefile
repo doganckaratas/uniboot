@@ -2,11 +2,11 @@
 # @brief	uniboot - the universal bootloader project
 # @version	v1.0
 # @author	dogan c. karatas
-# @date	29/01/2019
+# @date	11/02/2020
 
 # required tools: gcc, ld, binutils, mtools, dd, qemu-system-i386, dosfstools
 
-CFLAGS=-Wall -ffreestanding -I./include
+CFLAGS=-Wall -std=c99 -ffreestanding -I./include
 OUTPUT=./bin
 IMAGE=disk.img
 MAKE=make

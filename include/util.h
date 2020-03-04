@@ -3,15 +3,18 @@
  * @brief	uniboot - the universal bootloader project
  * @version	v1.0
  * @author	dogan c. karatas
- * @date	29/01/2019
+ * @date	11/02/2020
  **/
 #ifndef _UTIL_H
 #define _UTIL_H
 
-void putchar(char c);
-void puts(const char *s);
-const char* itoa(int val, int base);
+#include "stdtypes.h"
+
+void memcpy(void *dst, void *src, int n);
+void memset(void *dst, int c, int n);
+int strlen(char *);
+void reverse(char *);
+char* itoa(unsigned int val, int base);
 int atoi(char* str);
-void print(const char *fmt, ...);
 
 #endif /* _UTIL_H */

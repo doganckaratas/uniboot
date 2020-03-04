@@ -1,0 +1,11 @@
+Lower Memory Organization
+0x00000000 - 0x000003ff (1k)  : Real Mode IVT
+0x00000400 - 0x000004ff (256) : BIOS Data Area (Useful Port Information)
+0x00000500 - 0x000005ff (256) : uniboot Root Directory Table (after loading stage2, it is used as GDT location)
+0x00000600 - 0x000006ff (256) : Unused Available
+0x00000700 - 0x00007bff (30k) : uniboot stage2 Load Area
+0x00007c00 - 0x00007dff (512) : uniboot stage1 Load Area (free after stage2, refer to void reclaim_stage1_memory_area())
+0x00007e00 - 0x00007eff (256) : uniboot stage1 Disk Drive Information (free after stage2)
+0x00007eff - 0x0007ffff (480k): Unused Available
+0x00080000 - 0x0009ffff (128k): Extended BIOS Data Area (Memory Mapped IO / Video IO / Video & BIOS ROM)
+0x000A0000 - 0x000FFFFF (384k): Video ROM/Memory Area

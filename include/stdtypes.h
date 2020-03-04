@@ -3,11 +3,14 @@
  * @brief	uniboot - the universal bootloader project
  * @version	v1.0
  * @author	dogan c. karatas
- * @date	29/01/2019
+ * @date	11/02/2020
  **/
 #ifndef _STDTYPES_H
 #define _STDTYPES_H
 
+#define NULL 0
+
+typedef enum {false, true} bool;
 typedef char int8_t;
 typedef unsigned char uint8_t;
 typedef signed short int16_t;
