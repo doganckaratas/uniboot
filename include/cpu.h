@@ -8,7 +8,7 @@
 #ifndef _CPU_H
 #define _CPU_H
 
-#include "stdtypes.h"
+#include <stdint.h>
 
 /* x86 Register Names */
 enum {

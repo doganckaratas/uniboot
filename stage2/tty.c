@@ -10,14 +10,13 @@
 __asm__ (".code16gcc");
 
 #include <stdarg.h>
-#include "stdtypes.h"
+#include <stdint.h>
 #include "common.h"
 #include "util.h"
 #include "stage2/tty.h"
 
 struct tty *tty;
 struct tty tty1 = {.dev = TTY_DEVICE_VGA, .putc = vga_putc, .puts = vga_puts};
-// struct tty ttyS1 = {.dev = TTY_DEVICE_SERIAL, .putc = serial_putc, .puts = serial_puts};
 struct tty ttyS1 = {.dev = TTY_DEVICE_SERIAL, .putc = NULL, .puts = NULL};
 
 void initialize_tty(enum tty_device dev)
@@ -42,7 +41,7 @@ void print(const char *fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 	int d = 0;
-	unsigned int x = 0;
+	uint64_t x = 0;
 	char c = '\0';
 	char *s;
 	while (*fmt != '\0') {
@@ -61,7 +60,7 @@ void print(const char *fmt, ...)
 					tty->puts(s);
 					break;
 				case 'x':
-					x = va_arg(args, int);
+					x = va_arg(args, uint64_t);
 					tty->puts(itoa(x, 16));
 					break;
 				default:
@@ -82,7 +81,7 @@ void sprint(char *buf, const char *fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 	int d = 0;
-	unsigned int x = 0;
+	uint64_t x = 0;
 	char c = '\0';
 	char *s;
 	while (*fmt != '\0') {
@@ -104,7 +103,7 @@ void sprint(char *buf, const char *fmt, ...)
 					buf += strlen(s);
 					break;
 				case 'x':
-					x = va_arg(args, int);
+					x = va_arg(args, uint64_t);
 					memcpy((void *) buf, (void *) itoa(x, 16), strlen(itoa(x,16)));
 					buf += strlen(itoa(x,16));
 					break;

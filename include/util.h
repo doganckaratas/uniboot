@@ -8,13 +8,13 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-#include "stdtypes.h"
+#include <stdint.h>
 
 void memcpy(void *dst, void *src, int n);
 void memset(void *dst, int c, int n);
 int strlen(char *);
 void reverse(char *);
-char* itoa(unsigned int val, int base);
+char* itoa(uint32_t val, int base);
 int atoi(char* str);
 
 #endif /* _UTIL_H */

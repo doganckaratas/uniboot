@@ -9,7 +9,7 @@
 /* Tell gcc to emit 16-bit code */
 __asm__ (".code16gcc");
 
-#include "stdtypes.h"
+#include <stdint.h>
 #include "common.h"
 #include "cpu.h"
 #include "util.h"

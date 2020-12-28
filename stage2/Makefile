@@ -7,8 +7,8 @@
 # required tools: gcc, ld, binutils, mtools, dd, qemu-system-i386, dosfstools
 
 CC=i686-elf-gcc
-LD=i686-elf-ld
-CFLAGS=-std=gnu99 -ffreestanding -O0 -Wall -I../include -g -ggdb -O0
+LD=i686-elf-gcc
+CFLAGS=-std=gnu99 -ffreestanding -nostdlib -O0 -Wall -I../include -lgcc
 OUTPUT=../bin
 MAKE=make
 
@@ -41,7 +41,7 @@ idt.o: idt.c
 
 stage2: stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o
 	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
-	$(LD) $(LDFLAGS) -T stage2.ld -melf_i386 -o $@.elf $^
+	$(LD) $(LDFLAGS) -T stage2.ld -nostdlib -o $@.elf $^ -lgcc
 	objcopy -O binary $@.elf $(OUTPUT)/$@.bin
 
 .PHONY: clean

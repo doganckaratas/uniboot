@@ -9,7 +9,7 @@
 /* Tell gcc to emit 16-bit code */
 __asm__ (".code16gcc");
 
-#include "stdtypes.h"
+#include <stdint.h>
 #include "common.h"
 #include "util.h"
 #include "stage2/mem.h"
@@ -66,13 +66,7 @@ void __attribute__((regparm(3))) load_memory_map(int map_addr)
 
 	struct memory_map_entry* entry = (struct memory_map_entry*) map_addr;
 	int entry_count = e820_memory_detect(entry);
-	union {
-		struct {
-			uint32_t low;
-			uint32_t high;
-		} addr_32;
-		uint64_t addr_64;
-	} upper_addr;
+	uint64_t upper_addr;
 
 	print("[mem]: memory map is loaded at 0x%x\r\n", map_addr);
 
@@ -81,12 +75,12 @@ void __attribute__((regparm(3))) load_memory_map(int map_addr)
 		return;
 	} else {
 		for (int i = 0; i < entry_count; i++) {
-			upper_addr.addr_64 = entry[i].base_addr.base_addr_64 + entry[i].length.length_64;
+			upper_addr = entry[i].base_addr + entry[i].length;
 			print("[mem]: entry %d: %s range: 0x%x - 0x%x len: 0x%x\r\n", i,
 				memory_type_to_string(entry[i].type),
-				(entry[i].base_addr.base_addr_32.high << 8) | entry[i].base_addr.base_addr_32.low,
-				(upper_addr.addr_32.high << 8) | upper_addr.addr_32.low,
-				(entry[i].length.length_32.high << 8) |	entry[i].length.length_32.low
+				entry[i].base_addr,
+				upper_addr, // bug here in 64 bit printing!!!!!
+				entry[i].length
 			);
 		}
 	}

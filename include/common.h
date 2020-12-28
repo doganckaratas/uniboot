@@ -8,18 +8,10 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
-#include "stdtypes.h"
+#include <stdint.h>
 
 #define VERSION "v1.0"
-
-
-#if 0
-
-/* just a little sample for flags check */
-char *check_carry()
-{
-	return regs.eflags & FLAG_CF ? "Carry set" : "Carry Clear";
-}
-#endif
+#define NULL 0
+typedef enum {false, true} bool;
 
 #endif /* _COMMON_H */

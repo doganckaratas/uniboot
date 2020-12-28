@@ -10,7 +10,7 @@
 __asm__ (".code16gcc");
 
 #include <stdarg.h>
-#include "stdtypes.h"
+#include <stdint.h>
 #include "common.h"
 #include "stage2/vga.h"
 

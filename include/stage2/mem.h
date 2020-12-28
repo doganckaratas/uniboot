@@ -8,23 +8,11 @@
 #ifndef _MEMORY_H
 #define _MEMORY_H
 
-#include "stdtypes.h"
+#include <stdint.h>
 
 struct memory_map_entry {
-	union {
-		struct {
-			uint32_t low;
-			uint32_t high;
-		} base_addr_32;
-		uint64_t base_addr_64;
-	} base_addr;
-	union {
-		struct {
-			uint32_t low;
-			uint32_t high;
-		} length_32;
-		uint64_t length_64;
-	} length;
+	uint64_t base_addr;
+	uint64_t length;
 	uint32_t type; // entry type
 	uint32_t acpi_extended; // extended
 }__attribute__((packed));

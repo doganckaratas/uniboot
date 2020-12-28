@@ -10,7 +10,7 @@
 __asm__ (".code16gcc");
 
 #include <stdarg.h>
-#include "stdtypes.h"
+#include <stdint.h>
 #include "common.h"
 #include "util.h"
 
@@ -54,15 +54,15 @@ void reverse(char s[])
 	}
 }
 
-char* itoa(unsigned int val, int base)
+char* itoa(uint32_t val, int base)
 {
-	static char buf[17] = {0};
-	unsigned long int tmp;
+	static char buf[65] = {0};
+	uint32_t tmp;
 	int i = 0;
 
 	do {
         tmp = val % base;
-        buf[i++] = (tmp >= 10) ? (tmp + 'a' - 10) : (tmp + '0');
+        buf[i++] = (tmp < 10) ? (tmp + '0') : (tmp + 'a' - 10);
     } while (val /= base);
     buf[i--] = 0;
 

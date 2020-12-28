@@ -9,7 +9,7 @@
 /* Tell gcc to emit 16-bit code */
 __asm__ (".code16gcc");
 
-#include "stdtypes.h"
+#include <stdint.h>
 #include "common.h"
 
 void stage1() __attribute__((section (".init_fn")));
@@ -151,7 +151,7 @@ uint8_t read_sectors()
 	track = bpb.head_count * disk->sector;
 	head = (disk->lba % track) / disk->sector;
 	cylinder = disk->lba / track;
-	cylinder <<= 8;
+	cylinder <<= 16;
 	cylinder |= ((disk->lba % track) % disk->sector) + 1;
 
 	__asm__ ("int $0x13" : : "a"(0x0200 | size), "b"(buffer), "c"(cylinder), "d"((head << 8) | 0x0080));
