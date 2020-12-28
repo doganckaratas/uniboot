@@ -8,7 +8,7 @@
 
 CC=i686-elf-gcc
 LD=i686-elf-ld
-CFLAGS=-std=gnu99 -ffreestanding -O0 -Wall -I../include
+CFLAGS=-std=gnu99 -ffreestanding -O0 -Wall -I../include -g -ggdb -O0
 OUTPUT=../bin
 MAKE=make
 
@@ -24,10 +24,7 @@ util.o: util.c
 tty.o: tty.c
 	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
 
-memory.o: memory.c
-	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
-
-serial.o: serial.c
+mem.o: mem.c
 	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
 
 vga.o: vga.c
@@ -36,14 +33,17 @@ vga.o: vga.c
 pmode.o: pmode.c
 	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
 
-cpu.o: cpu.c
+gdt.o: gdt.c
 	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
 
-stage2: stage2.o util.o tty.o memory.o serial.o vga.o pmode.o cpu.o
+idt.o: idt.c
+	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
+
+stage2: stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o
 	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
 	$(LD) $(LDFLAGS) -T stage2.ld -melf_i386 -o $@.elf $^
 	objcopy -O binary $@.elf $(OUTPUT)/$@.bin
 
 .PHONY: clean
 clean:
-	rm -rf stage2.elf stage2.o util.o tty.o memory.o serial.o vga.o pmode.o cpu.o
+	rm -rf stage2.elf stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o

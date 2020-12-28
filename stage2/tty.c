@@ -17,13 +17,15 @@ __asm__ (".code16gcc");
 
 struct tty *tty;
 struct tty tty1 = {.dev = TTY_DEVICE_VGA, .putc = vga_putc, .puts = vga_puts};
-struct tty ttyS1 = {.dev = TTY_DEVICE_SERIAL, .putc = serial_putc, .puts = serial_puts};
+// struct tty ttyS1 = {.dev = TTY_DEVICE_SERIAL, .putc = serial_putc, .puts = serial_puts};
+struct tty ttyS1 = {.dev = TTY_DEVICE_SERIAL, .putc = NULL, .puts = NULL};
 
 void initialize_tty(enum tty_device dev)
 {
 	switch (dev){
 		case TTY_DEVICE_SERIAL:
-			tty = &ttyS1;
+			// tty = &ttyS1;
+			tty = NULL;
 			break;
 		case TTY_DEVICE_VGA:
 			tty = &tty1;

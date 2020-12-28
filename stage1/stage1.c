@@ -14,7 +14,7 @@ __asm__ (".code16gcc");
 
 void stage1() __attribute__((section (".init_fn")));
 int8_t seek_file();
-uint8_t read_directory();
+uint8_t read_sectors();
 void puts(char *);
 
 /* Boot sector linker location mapping
@@ -111,14 +111,14 @@ uint8_t size;
 void stage1()
 {
 	__asm__ volatile ("movl $0x7bff, %esp");
-	puts("uniboot "VERSION"\r\n[+] Stage 1 loaded.\r\n");
+	puts("uniboot "VERSION"\r\n[boot]: stage1 loaded\r\n");
 	__asm__ ("int $0x13" : "=c"(disk->sector) : "a"(0x0800), "d"(0x80) : "bx");
 	disk->sector &= 0b00111111;
 
 	disk->lba = bpb.reserved_sector_count + (bpb.fat_count * bpb.sectors_per_fat);
 	size = bpb.root_entry_count * sizeof(struct file) / bpb.bytes_per_sector;
-	/* root dir loaded into 0x500 */
-	read_directory();
+	/* root dir loaded into &buffer */
+	read_sectors();
 
 	/* seek stage2 in root */
 	for (entry = (struct file *) buffer; ; ++entry) {
@@ -127,7 +127,7 @@ void stage1()
 			buffer = (uint8_t *) stage2;
 			disk->lba += size + (entry->starting_cluster - 2) * bpb.sectors_per_cluster;
 			/* TODO: Seek until end of file, not predefined size */
-			read_directory();
+			read_sectors();
 
 			/* jump to stage2 */
 			stage2();
@@ -142,7 +142,7 @@ int8_t seek_file()
 	return ((int8_t*) entry)[i] - stage2_filename[i];
 }
 
-uint8_t read_directory()
+uint8_t read_sectors()
 {
 	/* lba to chs conversion */
 	uint32_t track;

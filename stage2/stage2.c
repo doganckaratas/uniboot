@@ -14,7 +14,7 @@ __asm__ (".code16gcc");
 #include "cpu.h"
 #include "util.h"
 #include "stage2/tty.h"
-#include "stage2/memory.h"
+#include "stage2/mem.h"
 #include "stage2/pmode.h"
 
 /* TODO 
@@ -42,13 +42,8 @@ void stage2()
 {
 	initialize_tty(TTY_DEVICE_VGA);
 	reclaim_stage1_memory_area();
-	print("[+] Stage 2 loaded at 0x%x.\r\n", 0x700);
-	uint32_t fls = get_flags();
-	load_memory_map(0x7c00);
-	print("PF=%d\r\n", fls & FLAG_PF);
-	disable_a20(); /* For debugging purposes */
-	enable_a20();
-	// load_gdt();
-	// enter_protected_mode();
+	print("[boot]: stage2 loaded at 0x0700.\r\n");
+	load_memory_map(0x7c00); // memory map using e820 loaded at 0x7c00 (after we inside protected mode we need to move it different place)
+	enter_pmode();
 	hang();
 }

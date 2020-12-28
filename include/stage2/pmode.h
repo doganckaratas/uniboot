@@ -12,5 +12,8 @@
 
 void enable_a20();
 void disable_a20();
+void enter_pmode();
+void enable_nmi();
+void disable_nmi();
 
 #endif /* _PMODE_H */

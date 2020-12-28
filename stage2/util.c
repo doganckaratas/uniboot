@@ -56,20 +56,15 @@ void reverse(char s[])
 
 char* itoa(unsigned int val, int base)
 {
-	static char buf[64] = {0};
-
-	// 32 bit means 8 figures,
+	static char buf[17] = {0};
+	unsigned long int tmp;
 	int i = 0;
-	int pad = 8;
-	do {       /* generate digits in reverse order */
-	     buf[i++] = "0123456789abcdef"[val % base];   /* get next digit */
-	} while ((val /= base) > 0);    /* delete it */
 
-	if (base == 16) {
-		for (; pad > i; i++)
-			buf[i] = '0';
-	}
-	buf[i] = '\0';
+	do {
+        tmp = val % base;
+        buf[i++] = (tmp >= 10) ? (tmp + 'a' - 10) : (tmp + '0');
+    } while (val /= base);
+    buf[i--] = 0;
 
 	reverse(buf);
 	return buf;

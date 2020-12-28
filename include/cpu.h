@@ -10,48 +10,6 @@
 
 #include "stdtypes.h"
 
-/* x86 Register Values */
-union regs {
-	struct {
-		uint32_t eax;
-		uint32_t ebx;
-		uint32_t ecx;
-		uint32_t edx;
-		uint32_t edi;
-		uint32_t esi;
-		uint32_t ebp;
-		uint32_t esp;
-		uint32_t fsgs;
-		uint32_t dses;
-		uint32_t eflags;
-	};
-	struct {
-		uint16_t ax, eaxh;
-		uint16_t bx, ebxh;
-		uint16_t cx, ecxh;
-		uint16_t dx, edxh;
-		uint16_t di, edih;
-		uint16_t si, esih;
-		uint16_t bp, ebph;
-		uint16_t sp, esph;
-		uint16_t gs;
-		uint16_t fs;
-		uint16_t es;
-		uint16_t ds;
-		uint16_t flags, eflagsh;
-	};
-	struct {
-		uint8_t al, ah, axl, axh;
-		uint8_t bl, bh, bxl, bxh;
-		uint8_t cl, ch, cxl, cxh;
-		uint8_t dl, dh, dxl, dxh;
-		uint8_t dil, dih, _edil, _edih;
-		uint8_t sil, sih, _esil, _esih;
-		uint8_t bpl, bph, _ebpl, _ebph;
-		uint8_t spl, sph, _espl, _esph;
-	};
-};
-
 /* x86 Register Names */
 enum {
 	REG_EAX = 1 << 0, REG_AX = 1 << 1, REG_AH = 1 << 2, REG_AL = 1 << 3,     
@@ -87,22 +45,112 @@ enum {
 	FLAG_ID = 1 << 21
 };
 
-void reset_cpu();
-void cli();
-void sti();
-void hlt();
-void hang();
-void push(uint32_t regs);
-void pop(uint32_t regs);
-void inc(uint32_t regs);
-void dec(uint32_t regs);
-void mov_reg(uint32_t from, uint32_t to);
-void mov_val(uint32_t value, uint32_t to);
-void clr(uint32_t regs);
-void outb(uint16_t port, uint8_t value);
-void outw(uint16_t port, uint16_t value);
-uint8_t inb(uint16_t port);
-uint16_t inw(uint16_t port);
-uint32_t get_flags();
+#define outb(port, value) __asm__ volatile("outb %1, %0\n" : : "Nd" ((uint16_t) port), "a" ((uint8_t) value))
+#define outw(port, value) __asm__ volatile("outw %1, %0\n" : : "Nd" ((uint16_t) port), "Na" ((uint16_t) value))
+
+#define inb(port) ({ \
+	uint8_t ret = 0; \
+	__asm__ volatile("inb %1, %0\n" : "=a" (ret) : "Nd" ((uint16_t) port)); \
+	ret; \
+})
+
+#define inw(port) ({ \
+	uint16_t ret = 0; \
+	__asm__ volatile("inw %1, %0\n" : "=a" (ret) : "Nd" ((uint16_t) port)); \
+	ret; \
+})
+
+#define reset_cpu()	outb(0x64, 0xfe)
+#define int(interrupt) __asm__ volatile("int $" #interrupt "\n")
+#define cli() __asm__ volatile ("cli\n")
+#define sti() __asm__ volatile ("sti\n")
+#define pusha() __asm__ volatile("pusha\n")
+#define popa() __asm__ volatile("popa\n")
+#define hlt() do { cli(); __asm__ volatile ("hlt\n"); } while(0);
+#define hang() do { hlt(); } while(1);
+
+#define mov_reg(from, to) do { \
+	if ((from & REG_AX) && (to & REG_AX)) { __asm__ volatile("movw %ax, %ax\n"); } \
+	else if ((from & REG_AX) && (to & REG_BX)) { __asm__ volatile("movw %ax, %bx\n"); } \
+	else if ((from & REG_AX) && (to & REG_CX)) { __asm__ volatile("movw %ax, %cx\n"); } \
+	else if ((from & REG_AX) && (to & REG_DX)) { __asm__ volatile("movw %ax, %dx\n"); } \
+	else if ((from & REG_BX) && (to & REG_AX)) { __asm__ volatile("movw %bx, %ax\n"); } \
+	else if ((from & REG_BX) && (to & REG_BX)) { __asm__ volatile("movw %bx, %bx\n"); } \
+	else if ((from & REG_BX) && (to & REG_CX)) { __asm__ volatile("movw %bx, %cx\n"); } \
+	else if ((from & REG_BX) && (to & REG_DX)) { __asm__ volatile("movw %bx, %dx\n"); } \
+	else if ((from & REG_CX) && (to & REG_AX)) { __asm__ volatile("movw %cx, %ax\n"); } \
+	else if ((from & REG_CX) && (to & REG_BX)) { __asm__ volatile("movw %cx, %bx\n"); } \
+	else if ((from & REG_CX) && (to & REG_CX)) { __asm__ volatile("movw %cx, %cx\n"); } \
+	else if ((from & REG_CX) && (to & REG_DX)) { __asm__ volatile("movw %cx, %dx\n"); } \
+	else if ((from & REG_DX) && (to & REG_AX)) { __asm__ volatile("movw %dx, %ax\n"); } \
+	else if ((from & REG_DX) && (to & REG_BX)) { __asm__ volatile("movw %dx, %bx\n"); } \
+	else if ((from & REG_DX) && (to & REG_CX)) { __asm__ volatile("movw %dx, %cx\n"); } \
+	else if ((from & REG_DX) && (to & REG_DX)) { __asm__ volatile("movw %dx, %dx\n"); } \
+} while(0);
+
+#define mov_val(value, to) do { \
+	if (to & REG_DI) { __asm__ volatile("movw %0, %%di\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_SI) { __asm__ volatile("movw %0, %%si\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_AX) { __asm__ volatile("movw %0, %%ax\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_BX) { __asm__ volatile("movw %0, %%bx\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_CX) { __asm__ volatile("movw %0, %%cx\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_DX) { __asm__ volatile("movw %0, %%dx\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_EAX) { __asm__ volatile("movl %0, %%eax\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_EBX) { __asm__ volatile("movl %0, %%ebx\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_ECX) { __asm__ volatile("movl %0, %%ecx\n" : : "i" ((uint32_t) value)); } \
+	else if (to & REG_EDX) { __asm__ volatile("movl %0, %%edx\n" : : "i" ((uint32_t) value)); } \
+} while(0);
+
+#define inc(regs) do { \
+	if (regs & REG_DI) { __asm__ volatile("incw %di\n"); } \
+	else if (regs & REG_SI) { __asm__ volatile("incw %si\n"); } \
+	else if (regs & REG_AX) { __asm__ volatile("incw %ax\n"); } \
+	else if (regs & REG_BX) { __asm__ volatile("incw %bx\n"); } \
+	else if (regs & REG_CX) { __asm__ volatile("incw %cx\n"); } \
+	else if (regs & REG_DX) { __asm__ volatile("incw %dx\n"); } \
+} while(0);
+
+#define dec(regs) do { \
+	if (regs & REG_DI) { __asm__ volatile("decw %di\n"); } \
+	else if (regs & REG_SI) { __asm__ volatile("decw %si\n"); } \
+	else if (regs & REG_AX) { __asm__ volatile("decw %ax\n"); } \
+	else if (regs & REG_BX) { __asm__ volatile("decw %bx\n"); } \
+	else if (regs & REG_CX) { __asm__ volatile("decw %cx\n"); } \
+	else if (regs & REG_DX) { __asm__ volatile("decw %dx\n"); } \
+} while(0);
+
+#define push(regs) do { \
+	if (regs & REG_FLAGS) { __asm__ volatile("pushf\n"); } \
+	else if (regs & REG_DS) { __asm__ volatile("pushw %ds\n"); } \
+	else if (regs & REG_FS) { __asm__ volatile("pushw %fs\n"); } \
+	else if (regs & REG_ES) { __asm__ volatile("pushw %es\n"); } \
+	else if (regs & REG_GS) { __asm__ volatile("pushw %gs\n"); } \
+	else if (regs & REG_DI) { __asm__ volatile("pushw %di\n"); } \
+	else if (regs & REG_SI) { __asm__ volatile("pushw %si\n"); } \
+	else if (regs & REG_AX) { __asm__ volatile("pushw %ax\n"); } \
+	else if (regs & REG_BX) { __asm__ volatile("pushw %bx\n"); } \
+	else if (regs & REG_CX) { __asm__ volatile("pushw %cx\n"); } \
+	else if (regs & REG_DX) { __asm__ volatile("pushw %dx\n"); } \
+} while(0);
+
+#define pop(regs) do { \
+	if (regs & REG_FLAGS) { __asm__ volatile("popf\n"); } \
+	else if (regs & REG_DS) { __asm__ volatile("popw %ds\n"); } \
+	else if (regs & REG_FS) { __asm__ volatile("popw %fs\n"); } \
+	else if (regs & REG_ES) { __asm__ volatile("popw %es\n"); } \
+	else if (regs & REG_GS) { __asm__ volatile("popw %gs\n"); } \
+	else if (regs & REG_DI) { __asm__ volatile("popw %di\n"); } \
+	else if (regs & REG_SI) { __asm__ volatile("popw %si\n"); } \
+	else if (regs & REG_AX) { __asm__ volatile("popw %ax\n"); } \
+	else if (regs & REG_BX) { __asm__ volatile("popw %bx\n"); } \
+	else if (regs & REG_CX) { __asm__ volatile("popw %cx\n"); } \
+	else if (regs & REG_DX) { __asm__ volatile("popw %dx\n"); } \
+} while(0);
+
+#define get_flags() ({ \
+	uint32_t flags = 0;	\
+	__asm__ volatile("pushl %%eax\npushf\npopl %0\npopl %%eax\n" : "=a" (flags)); \
+	flags; \
+})
 
 #endif /* _CPU_H */
