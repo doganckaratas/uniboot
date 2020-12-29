@@ -86,18 +86,18 @@ inline bool check_a20()
 	mov_val(0x00, REG_AX);
 	mov_val(0x500, REG_DI); // ES:DI = 0x0000:0x0500
 	mov_val(0x510, REG_SI); // DS:SI = 0xFFFF:0x0510
-	__asm__ volatile("movb %es:(%di), %al\n");
+	mov_reg((REG_ES | REG_DI), REG_AL);
 	push(REG_AX);
-	__asm__ volatile("movb %ds:(%si), %al\n");
+	mov_reg((REG_DS | REG_SI), REG_AL);
 	push(REG_AX);
-	__asm__ volatile("movb $0x00, %es:(%di)\n");
-	__asm__ volatile("movb $0xFF, %ds:(%si)\n");
+	mov_val(0x00, (REG_ES | REG_DI));
+	mov_val(0xFF, (REG_DS | REG_SI));
 	__asm__ volatile("cmpb $0xFF, %es:(%di)\n"); //bug?
 
 	pop(REG_AX);
-	__asm__ volatile("movb %al, %ds:(%si)\n");
+	mov_reg(REG_AL, (REG_DS | REG_SI));
 	pop(REG_AX);
-	__asm__ volatile("movb %al, %es:(%di)\n");
+	mov_reg(REG_AL, (REG_ES | REG_DI));
 	mov_val(0x00, REG_AX);
 
 	if (get_flags() & FLAG_ZF) {
