@@ -8,6 +8,7 @@
 
 CC=i686-elf-gcc
 LD=i686-elf-gcc
+OBJCOPY=i686-elf-objcopy
 CFLAGS=-std=gnu99 -ffreestanding -nostdlib -O0 -Wall -I../include -lgcc
 OUTPUT=../bin
 MAKE=make
@@ -42,7 +43,7 @@ idt.o: idt.c
 stage2: stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o
 	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
 	$(LD) $(LDFLAGS) -T stage2.ld -nostdlib -o $@.elf $^ -lgcc
-	objcopy -O binary $@.elf $(OUTPUT)/$@.bin
+	$(OBJCOPY) -O binary $@.elf $(OUTPUT)/$@.bin
 
 .PHONY: clean
 clean:
