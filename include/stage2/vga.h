@@ -8,7 +8,7 @@
 #ifndef _VGA_H
 #define _VGA_H
 
-void vga_putc(char c);
-void vga_puts(char *s);
+void vga_putc(const char c);
+void vga_puts(const char *s);
 
 #endif /* _VGA_H */

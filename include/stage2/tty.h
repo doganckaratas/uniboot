@@ -20,8 +20,8 @@ enum tty_device {
 
 struct tty {
 	enum tty_device dev;
-	void (*putc) (char);
-	void (*puts) (char *);
+	void (*putc) (const char);
+	void (*puts) (const char *);
 };
 
 void initialize_tty(enum tty_device);

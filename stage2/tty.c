@@ -13,18 +13,19 @@ __asm__ (".code16gcc");
 #include <stdint.h>
 #include "common.h"
 #include "util.h"
+#include "stage2/serial.h"
 #include "stage2/tty.h"
 
 struct tty *tty;
 struct tty tty1 = {.dev = TTY_DEVICE_VGA, .putc = vga_putc, .puts = vga_puts};
-struct tty ttyS1 = {.dev = TTY_DEVICE_SERIAL, .putc = NULL, .puts = NULL};
+struct tty ttyS1 = {.dev = TTY_DEVICE_SERIAL, .putc = serial_putc, .puts = serial_puts};
 
 void initialize_tty(enum tty_device dev)
 {
 	switch (dev){
 		case TTY_DEVICE_SERIAL:
-			// tty = &ttyS1;
-			tty = NULL;
+			serial_setup(tty_serial0, 38400); // TODO: 115200 is not uint16_t integer.
+			tty = &ttyS1;
 			break;
 		case TTY_DEVICE_VGA:
 			tty = &tty1;

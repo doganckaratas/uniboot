@@ -16,6 +16,7 @@ __asm__ (".code16gcc");
 #include "stage2/tty.h"
 #include "stage2/mem.h"
 #include "stage2/pmode.h"
+#include "stage2/serial.h"
 
 /* TODO 
  * Move stage 1 and stage 2 into arch/x86 folder.
@@ -41,6 +42,7 @@ void stage2() __attribute__((section (".stage2")));
 void stage2()
 {
 	initialize_tty(TTY_DEVICE_VGA);
+	// initialize_tty(TTY_DEVICE_SERIAL); // TODO: make it variadic by the first element.
 	reclaim_stage1_memory_area();
 	print("[boot]: stage2 loaded at 0x0700.\r\n");
 	load_memory_map(0x7c00); // memory map using e820 loaded at 0x7c00 (after we inside protected mode we need to move it different place)

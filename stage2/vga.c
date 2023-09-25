@@ -14,12 +14,12 @@ __asm__ (".code16gcc");
 #include "common.h"
 #include "stage2/vga.h"
 
-void vga_putc(char c)
+void vga_putc(const char c)
 {
 	__asm__ ("int $0x10" : : "a"(0x0e00 | c));
 }
 
-void vga_puts(char *s)
+void vga_puts(const char *s)
 {
 	for (; *s; ++s)
 		vga_putc(*s);

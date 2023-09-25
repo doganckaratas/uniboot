@@ -40,11 +40,14 @@ gdt.o: gdt.c
 idt.o: idt.c
 	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
 
-stage2: stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o
+serial.o: serial.c
+	$(CC) $(CFLAGS) -Os -m32 -c -o $@ $^
+
+stage2: stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o serial.o
 	if [ ! -d $(OUTPUT) ]; then mkdir $(OUTPUT); fi;
 	$(LD) $(LDFLAGS) -T stage2.ld -nostdlib -o $@.elf $^ -lgcc
 	$(OBJCOPY) -O binary $@.elf $(OUTPUT)/$@.bin
 
 .PHONY: clean
 clean:
-	rm -rf stage2.elf stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o
+	rm -rf stage2.elf stage2.o util.o tty.o mem.o vga.o pmode.o gdt.o idt.o serial.o

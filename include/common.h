@@ -11,7 +11,11 @@
 #include <stdint.h>
 
 #define VERSION "v1.0"
-#define NULL 0
+
+#ifndef NULL
+#define NULL ((void *) 0)
+#endif /* NULL */
+
 typedef enum {false, true} bool;
 
 #endif /* _COMMON_H */
